@@ -5,9 +5,29 @@ U2 Pins 13/14 appear to be serial RX/TX connection to the ESP32 GPIO16/17.  Leve
 
 Added a wire harness out the top with connections to the J1 header for the ESP32 and to TP10 and TP33.  It looks like 115200 baud serial.  esptool connected to the ESP okay.  115200 8n1 seemed to capture traffic okay.
 
+#### Packet structure
+
+`A5` appears to be start byte of packet
+
+`22` send message or `12` ack message
+
+`1-byte` sequence number, increments by one each packet
+
+`1-byte` size of payload after checksum byte
+
+`0` always zero
+
+`1-byte` checksum.  Computed as 255 - ( (sum all of bytes except checksum) % 256 )
+
+Payload:  MCU to ESP starts with `1 30 40`  ESP to MCU starts with `1 60 A2`
+
+The acknowledge packet `12` contains the same sequence number, with the payload as `1 30 40` or `1 60 A2` and `0`
+
+The MCU sends a status packet several times a second.
+
 TODO:
 
-- Decode serial protocol
+- Decode serial protocol / payload struture
 - Code custom UART esphome interface 
 - Investigate OTA of stock hardware without disassembly
 - Order a few more 300s for rest of house
