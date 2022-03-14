@@ -23,7 +23,7 @@ Payload:  MCU to ESP starts with `1 30 40`  ESP to MCU starts with `1 60 A2`
 
 The acknowledge packet `12` contains the same sequence number, with the payload as `1 30 40` or `1 60 A2` and `0`
 
-The MCU sends a status packet a few times a second to once every few seconds.  Frequency increases when controls are operated.
+The MCU sends a status packet a few times a second to once every few seconds.  Frequency increases when controls are operated.  After firmware update the MCU was way less chatty.  Only sending updates on state changes.
 
 `A5 22 1D 16 00 E4 01 30 40 00 07 00 02 01 00 01 64 01 00 00 01 03 00 00 00 3B 01 00`
 
@@ -55,13 +55,22 @@ Byte 19 Fan Auto Mode 0x00 default/air quality, 0x01 Quiet,  0x02 Efficient
 
 Byte 20 & 21 Efficient Area `3B 01` 100 sq ft  `76 02` 200 sq ft    `02 B1` 300 sq ft   `B1 03` 400 sq ft   
 
+#### ESPHome functions:
+
+- Toggle Power
+- Set fan Mode, Manual, Sleep, Auto
+- Set fan speed for manual mode
+- PM2.5 sensor feedback
+- No Timer/Schedule support (implement in HA instead of on device)
+
 #### TODO:
 
 - Decode serial protocol / payload struture
+- PM2.5 sensor is reading super low, troubleshoot
 - Code custom UART esphome interface 
 - Investigate OTA of stock hardware without disassembly
 - Order a few more 300s for rest of house
 
 #### Notes:
 
-Vesync app has FW version for ESP and MCU from the PCB sticker.  OTA firmware update from Vesync might update MCU firmware too.
+Vesync app has original FW version for ESP and MCU from the PCB sticker.  OTA firmware updated ESP and MCU firmware.
