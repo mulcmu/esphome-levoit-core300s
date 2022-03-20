@@ -25,9 +25,9 @@ Payload Type:  3 bytes,  12 unique types found so far
 
 The acknowledge packet `12` contains the same sequence number, with the `payload type` and `0`
 
-#### Payload types:
+#### Payload Tpes/Structure:
 
-##### `01 30 40` - Status 
+##### `01 30 40` - Status (MCU to ESP)
 
 The MCU sends a status packet a few times a second to once every few seconds.  Frequency increases when controls are operated.  After firmware update the MCU was way less chatty.  Only sending updates on state changes or once every 60 seconds.
 
@@ -108,35 +108,88 @@ Byte 20 & 21 Efficient Area:
 
 Byte 22 Always `0`
 
-##### `01 E6 A5`
+##### `01 E6 A5` - Configure Fan Auto Mode (ESP to MCU)
 
-##### `01 60 A2`
+Byte 4 Fan Auto Mode (Same as status Packet)
 
-##### `01 E0 A5`
+Byte 5 & 6 Efficient Area
 
-##### `01 29 A1`
+Byte 7 Always `0`
 
-##### `01 31 40`
+##### `01 60 A2` - Set Fan Manual (ESP to MCU)
 
-##### `01 E2 A5`
+Byte 4 Always `0`
 
-##### `01 00 A0`
+Byte 5 Always `0`
 
-##### `01 05 A1`
+Byte 6 Always `1`
 
-##### `01 E4 A5`
+Byte 7 Fan Speed:
 
-##### `01 65 A2` - Timer Packet
+- `01` Low
+- `02` Med
+- `03` High
+
+##### `01 E0 A5` - Set Fan Mode (ESP to MCU)
+
+Byte 4 Always `0`
+
+Byte 5 Fan Mode
+
+- `00` Manual (Assumed, App always uses `01 60 A2` with speed to change to manual speed)
+- `01` Sleep
+- `02` Auto 
+
+##### `01 29 A1` - 10 bytes at startup, direction???
+
+`A5	22	5	0A	0	74	1	29	A1	0	0	F4	1	F4	1	0
+A5	22	7	0A	0	61	1	29	A1	0	1	7D	0	7D	0	0`
+
+##### `01 31 40` - Startup Status
+
+Similar to status packet, only seen at startup
+
+##### `01 00 A0` - Set Power State (ESP to MCU)
+
+Byte 4 Always `0`
+
+Byte 5 Fan Speed:
+
+- `00` Off
+- `01` On
+
+##### `01 05 A1` Set Brightness (ESP to MCU)
+
+Byte 4 Always `0`
+
+Byte 5 Screen Brightness
+
+- `00` Screen Off
+- `64` Screen Full
+
+##### `01 E2 A5` - Unknown
+
+At startup
+
+Byte 4 `0`
+
+Byte 5 `0`
+
+##### `01 E4 A5` - Unknown
+
+Byte 4 0
+
+Byte 5 0
+
+No changes to status packet following
+
+##### `01 65 A2` - Timer Packet (MCU to ESP)
 
 MCU sends a packet when timer is running with remaining time
 
 `A5 12 27 0C 00 DA 01 65 A2 00 08 0D 00 00 10 0E 00 00`
 
 0x0D08 remaining seconds, Not sure on the rest.
-
-#### Payload structure:
-
-
 
 #### ESPHome functions:
 
@@ -150,7 +203,7 @@ MCU sends a packet when timer is running with remaining time
 #### TODO:
 
 - Decode serial protocol / payload struture
-- PM2.5 sensor is reading super low.  Other 3 units consistent 0 to 3 ug/m3.  Burning plastic triggered spike.
+- PM2.5 sensor is reading super low.  Other 3 units consistent 0 to 3 ug/m3.  Burning plastic / vacuum filter triggered spike.
 - Code custom UART esphome interface.
 - Investigate OTA of stock hardware without disassembly.
 
