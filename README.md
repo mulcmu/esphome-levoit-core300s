@@ -21,41 +21,122 @@ Uploaded packet captures.  Working to decode.  Looks like a periodic status pack
 
 `1-byte` checksum.  Computed as 255 - ( (sum all of bytes except checksum) % 256 )
 
-Payload:  MCU to ESP starts with `1 30 40`  ESP to MCU starts with `1 60 A2`
+Payload Type:  3 bytes,  12 unique types found so far
 
-The acknowledge packet `12` contains the same sequence number, with the payload as `1 30 40` or `1 60 A2` and `0`
+The acknowledge packet `12` contains the same sequence number, with the `payload type` and `0`
 
-The MCU sends a status packet a few times a second to once every few seconds.  Frequency increases when controls are operated.  After firmware update the MCU was way less chatty.  Only sending updates on state changes.
+#### Payload types:
+
+##### `01 30 40` - Status 
+
+The MCU sends a status packet a few times a second to once every few seconds.  Frequency increases when controls are operated.  After firmware update the MCU was way less chatty.  Only sending updates on state changes or once every 60 seconds.
 
 `A5 22 1D 16 00 E4 01 30 40 00 07 00 02 01 00 01 64 01 00 00 01 03 00 00 00 3B 01 00`
+
+22 byte long (0x16) status packet payload:
+
+Byte 4 Always `0`
+
+Byte 5 Always `0D`
+
+Byte 6 Always `0`
+
+Byte 7 Always `2`
+
+Byte 8 Power:  
+
+- `00` Off
+- `01` On 
+
+Byte 9 Fan mode:
+
+- `00` Manual
+- `01` Sleep
+- `02` Auto 
+
+Byte 10 Manual Fan Speed Selected
+
+- `00` (Occurs at startup for 1 packet)
+- `01` Low
+- `02` Med 
+- `03` High
+
+Byte 11 Screen Brightness
+
+- `00` Screen Off
+- `64` Screen Full (Screen illuminates briefly when another button is tapped while screen is off)
+
+Byte 12 Screen
+
+- `00` Off
+- `01` On 
+
+Byte 13 Current Fan Speed
+
+- `00` Sleep
+- `01` Low
+- `02` Med
+- `03` High
+- `255` Power Off
+
+Byte 14 Always `0`
+
+Byte 15 PM2.5
+
+Byte 16 PM2.5
+
+Byte 17 Always `0`
+
+Byte 18 Display Lock:
+
+- `00` Unlocked
+- `01` Locked
+
+Byte 19 Fan Auto Mode: (Only configurable by the app)
+
+- `00` Default, speed based on air quality
+- `01` Quiet, air quality but no max speed
+- `02` Efficient, based on room size
+
+Byte 20 & 21 Efficient Area: 
+
+- `3B 01` 100 sq ft (App Minimum)  0x013B is 315
+
+- `EC 04` 400 sq ft (App Maximum) 0x04EC is 1,260
+
+  Linear scale, not sure what the units are.
+
+Byte 22 Always `0`
+
+##### `01 E6 A5`
+
+##### `01 60 A2`
+
+##### `01 E0 A5`
+
+##### `01 29 A1`
+
+##### `01 31 40`
+
+##### `01 E2 A5`
+
+##### `01 00 A0`
+
+##### `01 05 A1`
+
+##### `01 E4 A5`
+
+##### `01 65 A2` - Timer Packet
 
 MCU sends a packet when timer is running with remaining time
 
 `A5 12 27 0C 00 DA 01 65 A2 00 08 0D 00 00 10 0E 00 00`
 
-0D08 remaining seconds
+0x0D08 remaining seconds, Not sure on the rest.
 
 #### Payload structure:
 
-22 byte long (0x16) status packet payload:
 
-Byte 8 power 0x01 On 0x00 off
-
-Byte 9 fan mode sleep 0x01, auto 0x02 On, 0x00 manual
-
-Byte 10 fan speed 0x01, 0x02, 0x03
-
-Byte 11 Screen 0 lights off, 0x64 lights on, Sleep mode
-
-Byte 12 Screen light off 0x00, Lights on 0x01
-
-Byte 16 PM2.5???
-
-Byte 18 Display Lock 0x00 unlocked,  0x01 locked
-
-Byte 19 Fan Auto Mode 0x00 default/air quality, 0x01 Quiet,  0x02 Efficient
-
-Byte 20 & 21 Efficient Area `3B 01` 100 sq ft   
 
 #### ESPHome functions:
 
