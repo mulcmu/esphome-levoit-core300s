@@ -5,11 +5,11 @@ U2 Pins 13/14 are serial RX/TX connection to the ESP32 GPIO16/17.  Level shiftin
 
 Added a wire harness out the top with connections to the J1 header for the ESP32 and to TP10 and TP33.  Push button added for boot mode.  esptool connected to the Core300s ESP okay.  Using an ESP32 devboard to capture both sides of the core300s traffic on TP10 and TP33 with a little Arduino [project](https://github.com/mulcmu/ESP32_dual_serial_log).  115200 8n1 seemed to capture traffic okay.
 
-Uploaded packet captures.  Working to decode.  Looks like a periodic status packet from MCU to ESP.  ESP has different command packets for different actions.  MCU to ESP has a timer feedback packet.  Long running packet capture to try to get filter percent change.
+Uploaded packet captures and mostly decoded.  Looks like a 3 byte payload type or bitmapped structure.  Long running packet capture still trying to get filter percent change.  It might be tracked in the ESP, not stored in MCU.
 
 #### Packet structure:
 
-`A5` appears to be start byte of packet
+`A5` start byte of packet
 
 `22` send message or `12` ack message
 
@@ -21,11 +21,11 @@ Uploaded packet captures.  Working to decode.  Looks like a periodic status pack
 
 `1-byte` checksum.  Computed as 255 - ( (sum all of bytes except checksum) % 256 )
 
-Payload Type:  3 bytes,  12 unique types found so far
+Payload Type:  3 bytes
 
 The acknowledge packet `12` contains the same sequence number, with the `payload type` and `0`
 
-#### Payload Tpes/Structure:
+#### Payload Types/Structure:
 
 ##### `01 30 40` - Status (MCU to ESP)
 
@@ -37,11 +37,11 @@ The MCU sends a status packet a few times a second to once every few seconds.  F
 
 Byte 4 Always `0`
 
-Byte 5 Always `0D`
+Byte 5 MCU FW SubMinor
 
-Byte 6 Always `0`
+Byte 6 MCU FW Minor
 
-Byte 7 Always `2`
+Byte 7 MCU FW Major
 
 Byte 8 Power:  
 
@@ -81,11 +81,11 @@ Byte 13 Current Fan Speed
 
 Byte 14 Always `0`
 
-Byte 15 PM2.5
+Byte 15 PM2.5  (Normally `1` increased to `4` during filter testing)
 
 Byte 16 PM2.5
 
-Byte 17 Always `0`
+Byte 17 PM2.5 Always `0`  (A few `1` during filter testing)
 
 Byte 18 Display Lock:
 
@@ -140,7 +140,16 @@ Byte 5 Fan Mode
 - `01` Sleep
 - `02` Auto 
 
-##### `01 29 A1` - 10 bytes at startup, direction???
+##### `1 0 D1` - Display Lock (ESP to MCU)
+
+Byte 4 Always `0`
+
+Byte 5Display Lock:
+
+- `00` Unlocked
+- `01` Locked
+
+##### `01 29 A1` - 10 bytes at startup, (ESP to MCU)
 
 `A5	22	5	0A	0	74	1	29	A1	0	0	F4	1	F4	1	0
 A5	22	7	0A	0	61	1	29	A1	0	1	7D	0	7D	0	0`
@@ -167,7 +176,7 @@ Byte 5 Screen Brightness
 - `00` Screen Off
 - `64` Screen Full
 
-##### `01 E2 A5` - Unknown
+##### `01 E2 A5` - Unknown (ESP to MCU)
 
 At startup
 
@@ -175,21 +184,43 @@ Byte 4 `0`
 
 Byte 5 `0`
 
-##### `01 E4 A5` - Unknown
+Wasn't in original captures before firmware update
 
-Byte 4 0
+##### `01 E4 A5` - Reset Filter (ESP to MCU and MCU to ESP)
 
-Byte 5 0
+Byte 4 `0`
 
-No changes to status packet following
+Byte 5 `0`
 
-##### `01 65 A2` - Timer Packet (MCU to ESP)
+MCU sends to ESP when sleep button held for 3 seconds
+
+ESP sends to MCU when reset on app.
+
+##### `01 65 A2` - Timer Status (MCU to ESP)
 
 MCU sends a packet when timer is running with remaining time
 
 `A5 12 27 0C 00 DA 01 65 A2 00 08 0D 00 00 10 0E 00 00`
 
-0x0D08 remaining seconds, Not sure on the rest.
+Remaining time and initial time.
+
+0x0D08 remaining seconds
+
+0x0E10 initial seconds
+
+##### `1 64 A2` Set Timer Time (ESP to MCU)
+
+Byte 4 Always `0`
+
+Byte 5 & 6 Time
+
+Byte 7 & 8 Always `0`
+
+##### `1 66 A2` Timer Start or Clear (MCU to ESP)
+
+Byte 4 to 12 All `0` to Clear
+
+Byte 5 & 6 and Byte 9 &10 set to same initial timer value
 
 #### ESPHome functions:
 
@@ -202,11 +233,16 @@ MCU sends a packet when timer is running with remaining time
 
 #### TODO:
 
-- Decode serial protocol / payload struture
+- Figure out filter percentage and PM2.5 value
+- See if `01 E4 A5` can b be used to turn filter light on/off by ESP
 - PM2.5 sensor is reading super low.  Other 3 units consistent 0 to 3 ug/m3.  Burning plastic / vacuum filter triggered spike.
 - Code custom UART esphome interface.
 - Investigate OTA of stock hardware without disassembly.
 
 #### Notes:
 
-Vesync app has original FW version for ESP and MCU from the PCB sticker.  OTA firmware updated ESP and MCU firmware.
+Vesync app has original FW version for ESP and MCU from the PCB sticker.  OTA firmware updated ESP and MCU firmware.  Is MCU firmware binary stored in the ESP firmware?
+
+The external ESP32 data logger can be used as test ESPhome device if internal ESP32 is put into bootloader mode at powerup.
+
+The FTDI cable LEDs are flashing periodically, the internal ESP32 might be sending out some interesting data on the serial port. 
