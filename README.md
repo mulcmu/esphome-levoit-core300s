@@ -228,12 +228,12 @@ Byte 5 & 6 and Byte 9 &10 set to same initial timer value
 - Set fan Mode, Manual, Sleep, Auto
 - Set fan speed for manual mode
 - PM2.5 sensor feedback
-- Filter life remaining
+- Filter life remaining.  
 - No Timer/Schedule support (implement in HA instead of on device)
 
 #### TODO:
 
-- Figure out filter percentage and PM2.5 value
+- Figure out PM2.5 values
 - See if `01 E4 A5` can b be used to turn filter light on/off by ESP
 - PM2.5 sensor is reading super low.  Other 3 units consistent 0 to 3 ug/m3.  Burning plastic / vacuum filter triggered spike.
 - Code custom UART esphome interface.
@@ -245,4 +245,10 @@ Vesync app has original FW version for ESP and MCU from the PCB sticker.  OTA fi
 
 The external ESP32 data logger can be used as test ESPhome device if internal ESP32 is put into bootloader mode at powerup.
 
-The FTDI cable LEDs are flashing periodically, the internal ESP32 might be sending out some interesting data on the serial port. 
+Internal ESP32 sends out some limited status information on the serial port during operation.
+
+Internal ESP32 seems to use MQTT to communicate with Vesync servers.  Wireshark dissector shows packets as malformed.  They might be encrypted.
+
+FW update downloads file from fw.vesync.com.  Looks to be initiated by MQTT. OTA error message indicates vesync header invalid.
+
+It seems the filter life is tracked and stored in the ESP.  ESPHome implementation will need to replicate.
