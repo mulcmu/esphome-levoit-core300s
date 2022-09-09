@@ -156,6 +156,8 @@ Wifi LED toggled at startup and when network connection changes
 `	1	29	A1	0	0	F4	1	F4	1	0` Off
 `1	29	A1	0	1	7D	0	7D	0	0` On
 
+`1	29	A1  0   2   F4  1   F4  1   0` Blink
+
 ##### `01 31 40` - Request Status (ESP to MCU)
 
 Similar to status packet, occurs when Wifi led state is changed.  
