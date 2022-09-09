@@ -5,7 +5,7 @@ U2 Pins 13/14 are serial RX/TX connection to the ESP32 GPIO16/17.  Level shiftin
 
 Added a wire harness out the top with connections to the J1 header for the ESP32 and to TP10 and TP33.  Push button added for boot mode.  esptool connected to the Core300s ESP okay.  Using an ESP32 devboard to capture both sides of the core300s traffic on TP10 and TP33 with a little Arduino [project](https://github.com/mulcmu/ESP32_dual_serial_log).  115200 8n1 seemed to capture traffic okay.
 
-Uploaded packet captures and mostly decoded.  Looks like a 3 byte payload type or bitmapped structure.  Long running packet capture still trying to get filter percent change.  It might be tracked in the ESP, not stored in MCU.
+Uploaded packet captures and mostly decoded.  Looks like a 3 byte payload type or bitmapped structure.  Filter life appears to be traced by the ESP, not stored in the U2 MCU.  ESPHome will need to replicate some sort of filter usage metric.  
 
 #### Packet structure:
 
@@ -149,14 +149,16 @@ Byte 5Display Lock:
 - `00` Unlocked
 - `01` Locked
 
-##### `01 29 A1` - 10 bytes at startup, (ESP to MCU)
+##### `01 29 A1` - Wifi LED state (ESP to MCU)
 
-`A5	22	5	0A	0	74	1	29	A1	0	0	F4	1	F4	1	0
-A5	22	7	0A	0	61	1	29	A1	0	1	7D	0	7D	0	0`
+Wifi LED toggled at startup and when network connection changes
 
-##### `01 31 40` - Startup Status
+`	1	29	A1	0	0	F4	1	F4	1	0` Off
+`1	29	A1	0	1	7D	0	7D	0	0` On
 
-Similar to status packet, only seen at startup
+##### `01 31 40` - Request Status (ESP to MCU)
+
+Similar to status packet, occurs when Wifi led state is changed.  
 
 ##### `01 00 A0` - Set Power State (ESP to MCU)
 
@@ -178,7 +180,7 @@ Byte 5 Screen Brightness
 
 ##### `01 E2 A5` - Unknown (ESP to MCU)
 
-At startup
+At startup, maybe filter led state?
 
 Byte 4 `0`
 
@@ -235,9 +237,10 @@ Byte 5 & 6 and Byte 9 &10 set to same initial timer value
 
 - Figure out PM2.5 values
 - See if `01 E4 A5` can b be used to turn filter light on/off by ESP
-- PM2.5 sensor is reading super low.  Other 3 units consistent 0 to 3 ug/m3.  Burning plastic / vacuum filter triggered spike.
+- PM2.5 sensor is reading super low.  Other 3 Core300s units are consistent with readings of 0 to 3 ug/m3.  Burning plastic / vacuum filter triggered spike.
 - Code custom UART esphome interface.
 - Investigate OTA of stock hardware without disassembly.
+- Can ESP control the wifi indicator light?  Is this a ESP32 gpio or MCU pin?
 
 #### Notes:
 
