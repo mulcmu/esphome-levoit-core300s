@@ -50,6 +50,7 @@ class component_core300sUART :
         ESP_LOGD(TAG, "setup().");
         
         rx_buf.reserve(128);
+        tx_buf.reserve(32);
         
         sensor_pm25->publish_state(NAN);
         sensor_roomSize->publish_state(NAN);
@@ -65,6 +66,7 @@ class component_core300sUART :
         set_update_interval(200);
 
         //Services to allow home assistant to control air filter
+        //TODO, make these buttons
         register_service(&component_core300sUART::set_fan_manual_high, "set_fan_manual_high");
         register_service(&component_core300sUART::set_fan_manual_medium, "set_fan_manual_medium");
         register_service(&component_core300sUART::set_fan_manual_low, "set_fan_manual_low");        
@@ -113,7 +115,7 @@ class component_core300sUART :
         
   private: 
     uint8_t b=0;
-    std::vector<uint8_t> rx_buf; 
+    std::vector<uint8_t> rx_buf,tx_buf; 
    
     //std::vector<uint8_t> erd2050= {0XE2, 0XC0, 0X0B, 0XBB, 0XF0, 0X01, 0X20, 0X50, 0XC4, 0XCB, 0xE3};    //Dryer Heat Setting  
 
@@ -148,6 +150,21 @@ class component_core300sUART :
     }
 
 
+    void acknowledge_packet() {
+        tx_buf.clear();
+        tx_buf.assign(rx_buf.begin(),rx_buf.begin()+9);
+        tx_buf.push_back(0);
+        tx_buf[1]=0x12;  //ack byte
+        tx_buf[3]=4; //payload lenght
+        tx_buf[5]=0; //checksum byte
+        uint8_t cs=255;
+        for(int i=0; i<tx_buf.size(); i++) {
+            cs -= tx_buf[i];
+        }
+        tx_buf[5]=cs;
+        write_array(tx_buf);
+    }
+
     void process_packet()  {
         //uart::UARTDebug::log_hex(uart::UARTDirection::UART_DIRECTION_RX , rx_buf, '-');
         char buf[32];        
@@ -155,6 +172,9 @@ class component_core300sUART :
         packet_type = (rx_buf[6] << 16) + (rx_buf[7] << 8) + rx_buf[8];
         ESP_LOGD(TAG, "process_packet type %X", packet_type);
         
+        if(rx_buf[1]==0x22)
+            acknowledge_packet();
+
         switch (packet_type) {
             case 0x013040:  //Status packet
                 if (rx_buf.size() != 28)
