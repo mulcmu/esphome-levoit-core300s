@@ -42,26 +42,12 @@ time:
     id: homeassistant_time
 
 uart:
-  - id: uart_esp2mcu
-    tx_pin: 
-      number: GPIO17
-      inverted: false
-    rx_pin: 
-      number: GPIO16
-      inverted: false
-    baud_rate: 115200
-    debug:
-      direction: BOTH
-      after:
-          timeout: 50ms
-      sequence:
-        - lambda:  UARTDebug::log_hex(direction, bytes, ' ');
   - id: uart_mcu2esp
     tx_pin: 
-      number: GPIO19
+      number: GPIO21
       inverted: false
     rx_pin: 
-      number: GPIO18
+      number: GPIO22
       inverted: false
     baud_rate: 115200
     debug:
@@ -73,13 +59,8 @@ uart:
         
 custom_component:
   - lambda: |-
-       auto extra = component_core300sUART::instance(id(uart_esp2mcu));
-       return {extra};  
-  - lambda: |-
       auto c_core300_uart = ${init}
       return {c_core300_uart};
-
-
 
 sensor:
   # Uptime sensor.
@@ -90,39 +71,35 @@ sensor:
   - platform: wifi_signal
     name: ${upper_name} WiFi Signal
     update_interval: 60s
+
   - platform: custom
     lambda: |-
       auto c_core300_uart = ${init}
       return {
-        c_core300_uart->sensor_fanSpeed,
         c_core300_uart->sensor_pm25,
         c_core300_uart->sensor_roomSize
       };
-  
-      
     sensors:
-      - name: ${upper_name} Fan Speed
-        unit_of_measurement: min
-        accuracy_decimals: 0
-        icon: mdi:fan
       - name: ${upper_name} PM25
         accuracy_decimals: 0
-        icon: mdi:progress-clock
+        icon: mdi:air-filter
       - name: ${upper_name} Room Size
         accuracy_decimals: 0
-        icon: mdi:progress-clock
+        icon: mdi:axis-arrow
+        entity_category: config
         
-
 # Text sensors with general information.
 text_sensor:
   # Expose WiFi information as sensors.
   - platform: wifi_info
     ip_address:
       name: ${upper_name} IP
+
   - platform: custom
     lambda: |-
         auto c_core300_uart = ${init}
         return {
+          c_core300_uart->textsensor_fanSpeed,
           c_core300_uart->textsensor_Power,
           c_core300_uart->textsensor_FanMode,
           c_core300_uart->textsensor_DisplayLit,
@@ -132,36 +109,21 @@ text_sensor:
         };
            
     text_sensors:
-        - name: ${upper_name} Power
+        - name: ${upper_name} Fan Speed
           icon: mdi:fan
+        - name: ${upper_name} Power
+          icon: mdi:power
         - name: ${upper_name} FanMode
           icon: mdi:fan
         - name: ${upper_name} DisplayLit
-          icon: mdi:washing-machine
+          icon: mdi:lightbulb-on-50
         - name: ${upper_name} Display Locked
-          icon: mdi:alarm-check
+          icon: mdi:locked
         - name: ${upper_name} Fan Auto Mode
-          icon: mdi:liquid-spot
+          icon: mdi:fan-auto
         - name: ${upper_name} FW
-          icon: mdi:thermometer
-
-#turn on blue led on at boot and back off when connected to wifi
-output:
-  - platform: gpio
-    pin: GPIO2
-    id: onboard_led
-    inverted: True
-
-interval:
-  - interval: 1s
-    then:
-      if:
-        condition:
-          wifi.connected:
-        then:
-          - output.turn_on: onboard_led
-        else:
-          - output.turn_off: onboard_led
+          icon: mdi:select-inverse
+          entity_category:  diagnostic
 
 button:
   #HA button to restart.
