@@ -220,3 +220,18 @@ button:
         auto c_core300_uart = ${init}
         c_core300_uart->wifi_led_on();                          
 
+#TODO, see if this can be triggered on state change
+interval:
+  - interval: 1s
+    then:
+      if:
+        condition:
+          wifi.connected:
+        then:
+          - lambda: |-
+              auto c_core300_uart = ${init}
+              c_core300_uart->wifi_led_on();  
+        else:
+          - lambda: |-
+              auto c_core300_uart = ${init}
+              c_core300_uart->wifi_led_off();  
