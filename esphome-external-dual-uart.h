@@ -63,13 +63,8 @@ class component_core300sUART :
         textsensor_DisplayLocked->publish_state("Unknown");    
         textsensor_FanAutoMode->publish_state("Unknown");    
         
-        set_update_interval(200);
-
-        //Services to allow home assistant to control air filter
-        //TODO, make these buttons
-        register_service(&component_core300sUART::set_fan_manual_high, "set_fan_manual_high");
-        register_service(&component_core300sUART::set_fan_manual_medium, "set_fan_manual_medium");
-        register_service(&component_core300sUART::set_fan_manual_low, "set_fan_manual_low");        
+        set_update_interval(5);
+  
     }
 
     void update() override
@@ -111,13 +106,42 @@ class component_core300sUART :
           
               
         }
-
+    
+    void set_fan_manual_high(void) {
+        ESP_LOGD(TAG, "set_fan_manual_high");
+        send_command(cmd_set_fan_manual_high);
+    }
+        
+    void set_fan_manual_medium(void) {
+        ESP_LOGD(TAG, "set_fan_manual_medium");
+        send_command(cmd_set_fan_manual_medium);    }
+        
+    void set_fan_manual_low(void) {
+        ESP_LOGD(TAG, "set_fan_manual_low");
+        send_command(cmd_set_fan_manual_low);
+    }
         
   private: 
     uint8_t b=0;
-    std::vector<uint8_t> rx_buf,tx_buf; 
+    std::vector<uint8_t> rx_buf,tx_buf;
+    uint8_t tx_seq_num = 0;
    
-    //std::vector<uint8_t> erd2050= {0XE2, 0XC0, 0X0B, 0XBB, 0XF0, 0X01, 0X20, 0X50, 0XC4, 0XCB, 0xE3};    //Dryer Heat Setting  
+    std::vector<uint8_t> cmd_set_fan_manual_high   = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X03};
+    std::vector<uint8_t> cmd_set_fan_manual_medium = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X02};
+    std::vector<uint8_t> cmd_set_fan_manual_low    = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X01};
+    
+    std::vector<uint8_t> cmd_set_fan_mode_manual   = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE0, 0XA5, 0X00, 0X00};  //Not used by vesync app
+    std::vector<uint8_t> cmd_set_fan_mode_sleep    = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE0, 0XA5, 0X00, 0X01};
+    std::vector<uint8_t> cmd_set_fan_mode_auto     = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE0, 0XA5, 0X00, 0X02};
+
+    std::vector<uint8_t> cmd_lock_display          = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0XD1, 0X00, 0X01};
+    std::vector<uint8_t> cmd_unlock_display        = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0XD1, 0X00, 0X00};    
+
+    std::vector<uint8_t> cmd_wifi_led_off          = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};    
+    std::vector<uint8_t> cmd_wifi_led_flash        = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};
+    std::vector<uint8_t> cmd_wifi_led_on           = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};
+    
+    std::vector<uint8_t> cmd_unloack_display       = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0XD1, 0X00, 0X00};        
 
     component_core300sUART(UARTComponent *parent) : PollingComponent(200), UARTDevice(parent) 
     {
@@ -133,23 +157,18 @@ class component_core300sUART :
         this->textsensor_FanAutoMode  = new TextSensor();
         
     }
-        
-    void set_fan_manual_high(void) {
-        ESP_LOGD(TAG, "set_fan_manual_high");
-        //write_str(buf);
-    }
-        
-    void set_fan_manual_medium(void) {
-        ESP_LOGD(TAG, "set_fan_manual_medium");
-        //write_str(buf);
-    }
-        
-    void set_fan_manual_low(void) {
-        ESP_LOGD(TAG, "set_fan_manual_low");
-        //write_str(buf);
-    }
 
-
+    void send_command(std::vector< uint8_t > &cmd) {
+        cmd[2]=tx_seq_num++;
+        cmd[5]=0; //zero checksum byte
+        uint8_t cs=255;
+        for(int i=0; i<cmd.size(); i++) {
+            cs -= cmd[i];
+        }
+        cmd[5]=cs;
+        write_array(cmd);
+    }
+        
     void acknowledge_packet() {
         tx_buf.clear();
         tx_buf.assign(rx_buf.begin(),rx_buf.begin()+9);

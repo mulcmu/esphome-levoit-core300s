@@ -129,3 +129,21 @@ button:
   #HA button to restart.
   - platform: restart
     name: ${upper_name} Restart
+  - platform: template
+    name: "Set Fan Manual High"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_manual_high();
+  - platform: template
+    name: "Set Fan Manual Medium"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_manual_medium();   
+  - platform: template
+    name: "Set Fan Manual Low"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_manual_low();               
