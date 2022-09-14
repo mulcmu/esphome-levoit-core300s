@@ -29,8 +29,6 @@ class component_core300sUART :
     TextSensor *textsensor_DisplayLit;
     TextSensor *textsensor_DisplayLocked;
     TextSensor *textsensor_FanAutoMode;
-
-
     
     static component_core300sUART* instance(UARTComponent *parent)
     {
@@ -64,6 +62,8 @@ class component_core300sUART :
         textsensor_FanAutoMode->publish_state("Unknown");    
         
         set_update_interval(5);
+
+        send_command(cmd_get_status);
   
     }
 
@@ -105,7 +105,7 @@ class component_core300sUART :
           }
           
               
-        }
+    }
     
     void power_on(void) {
         ESP_LOGD(TAG, "power_on");
@@ -147,6 +147,23 @@ class component_core300sUART :
         send_command(cmd_set_fan_mode_auto);    
     }
         
+    void set_fan_auto_ppm(void) {
+        ESP_LOGD(TAG, "cmd_set_fan_auto_ppm");
+        send_command(cmd_set_fan_auto_ppm);
+    }
+        
+    void set_fan_auto_ppmQuiet(void) {
+        ESP_LOGD(TAG, "set_fan_auto_ppmQuiet");
+        send_command(cmd_set_fan_auto_ppmQuiet);
+    }
+        
+    void set_fan_auto_area(void) {
+        ESP_LOGD(TAG, "set_fan_auto_area");
+        cmd_set_fan_auto_area[11]=areaL;
+        cmd_set_fan_auto_area[12]=areaH;
+        send_command(cmd_set_fan_auto_area);    
+    }
+
     void lock_display(void) {
         ESP_LOGD(TAG, "lock_display");
         send_command(cmd_lock_display);
@@ -168,33 +185,63 @@ class component_core300sUART :
     }
 
     void wifi_led_off(void) {
+        if (wifi_led==0) {
+            return;
+        }
         ESP_LOGD(TAG, "wifi_led_off");
         send_command(cmd_wifi_led_off);
+        wifi_led=0;
     }
         
     void wifi_led_flash(void) {
+        if (wifi_led==2) {
+            return;
+        }
         ESP_LOGD(TAG, "wifi_led_flash");
-        send_command(cmd_wifi_led_flash);    
+                send_command(cmd_wifi_led_flash);    
+        wifi_led=2;
     }
         
     void wifi_led_on(void) {
+        if (wifi_led==1) {
+            return;
+        }
         ESP_LOGD(TAG, "wifi_led_on");
         send_command(cmd_wifi_led_on);
-    }                
+        wifi_led=1;
+    }      
+
+    void filter_led_on(void) {
+        ESP_LOGD(TAG, "filter_led_on");
+        send_command(cmd_filter_led_on);    
+    }
+        
+    void filter_led_off(void) {
+        ESP_LOGD(TAG, "filter_led_off");
+        send_command(cmd_filter_led_off);
+    }              
           
   private: 
     uint8_t b=0;
     std::vector<uint8_t> rx_buf,tx_buf;
     uint8_t tx_seq_num = 0;
-   
+    uint8_t wifi_led = 0;
+    uint8_t areaH=0x01, areaL=0x3B;
+
+    std::vector<uint8_t> cmd_get_status            = {0XA5, 0X22, 0XFF, 0X04, 0X00, 0XFF, 0X01, 0X31, 0X40, 0X00};
+
     std::vector<uint8_t> cmd_power_on              = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0XA0, 0X00, 0X01};
     std::vector<uint8_t> cmd_power_off             = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0xA0, 0X00, 0X00};  
 
     std::vector<uint8_t> cmd_set_fan_manual_high   = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X03};
     std::vector<uint8_t> cmd_set_fan_manual_medium = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X02};
     std::vector<uint8_t> cmd_set_fan_manual_low    = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X01};
+
+    std::vector<uint8_t> cmd_set_fan_auto_ppm      = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0XE6, 0XA5, 0X00, 0X00, 0X00, 0X00};
+    std::vector<uint8_t> cmd_set_fan_auto_ppmQuiet = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0XE6, 0XA5, 0X00, 0X01, 0x00, 0X00};
+    std::vector<uint8_t> cmd_set_fan_auto_area     = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0XE6, 0XA5, 0X00, 0X02, 0X3B, 0X01};    
     
-    std::vector<uint8_t> cmd_set_fan_mode_manual   = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE0, 0XA5, 0X00, 0X00};  //Not used by vesync app
+    std::vector<uint8_t> cmd_set_fan_mode_manual   = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE0, 0XA5, 0X00, 0X00};  //Not used by vesync app but works to restore last fan speed
     std::vector<uint8_t> cmd_set_fan_mode_sleep    = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE0, 0XA5, 0X00, 0X01};
     std::vector<uint8_t> cmd_set_fan_mode_auto     = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE0, 0XA5, 0X00, 0X02};
 
@@ -207,6 +254,9 @@ class component_core300sUART :
     std::vector<uint8_t> cmd_wifi_led_off          = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};    
     std::vector<uint8_t> cmd_wifi_led_on           = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X01, 0X7D, 0X00, 0X7D, 0X00, 0X00};
     std::vector<uint8_t> cmd_wifi_led_flash        = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X02, 0XF4, 0X01, 0XF4, 0X01, 0X00};
+
+    std::vector<uint8_t> cmd_filter_led_on         = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE2, 0XA5, 0X00, 0X01};
+    std::vector<uint8_t> cmd_filter_led_off        = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0XE2, 0xA5, 0X00, 0X00};      
     
     component_core300sUART(UARTComponent *parent) : PollingComponent(200), UARTDevice(parent) 
     {
@@ -233,7 +283,8 @@ class component_core300sUART :
         cmd[5]=cs;
         write_array(cmd);
     }
-        
+
+       
     void acknowledge_packet() {
         tx_buf.clear();
         tx_buf.assign(rx_buf.begin(),rx_buf.begin()+9);
@@ -261,6 +312,7 @@ class component_core300sUART :
 
         switch (packet_type) {
             case 0x013040:  //Status packet
+            case 0x013140:
                 if (rx_buf.size() != 28)
                     return;
 
@@ -368,7 +420,7 @@ class component_core300sUART :
                     break;
 
                     case 0x02:
-                    textsensor_FanAutoMode->publish_state("Efficient");
+                    textsensor_FanAutoMode->publish_state("Room Size");
                     break;                
 
                     default:
@@ -376,6 +428,8 @@ class component_core300sUART :
                     textsensor_FanAutoMode->publish_state(buf);
                 }
 
+                areaL=rx_buf[25];
+                areaH=rx_buf[26];
                 sensor_roomSize->publish_state( (rx_buf[26]<<8) + rx_buf[25]);
 
             break;

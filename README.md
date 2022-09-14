@@ -3,15 +3,17 @@ Work in progress for upgrading a Levoit Core 300s air purifier to use esphome lo
 
 U2 Pins 13/14 are serial RX/TX connection to the ESP32 GPIO16/17.  Level shifting mosfets on bottom of PCB.  TP10 and TP33 by the ESP32 are respective test points.
 
-Added a wire harness out the top with connections to the J1 header for the ESP32 and to TP10 and TP33.  Push button added for boot mode.  esptool connected to the Core300s ESP okay.  Using an ESP32 devboard to capture both sides of the core300s traffic on TP10 and TP33 with a little Arduino [project](https://github.com/mulcmu/ESP32_dual_serial_log).  115200 8n1 seemed to capture traffic okay.
+Added a wire harness out the top with connections to the J1 header for the ESP32 and to TP10 and TP33.  Push button added for boot mode.  esptool connected to the Core300s ESP okay.  Used an ESP32 devboard to capture both sides of the core300s traffic on TP10 and TP33 with a little Arduino [project](https://github.com/mulcmu/ESP32_dual_serial_log).  115200 8n1 seemed to capture traffic okay.
 
-Uploaded packet captures and mostly decoded.  Looks like a 3 byte payload type or bitmapped structure.  Filter life appears to be traced by the ESP, not stored in the U2 MCU.  ESPHome will need to replicate some sort of filter usage metric.  
+Uploaded packet captures and mostly decoded.  Looks like a 3 byte payload type or bitmapped structure.  Filter life appears to be traced by the ESP, not stored in the U2 MCU.  ESPHome will need to replicate some sort of filter usage metric.
+
+Custom UART component for ESPHome is mostly working.  Expected feedback from air filter confirmed and buttons working to control unit via local network, no vesync app/cloud.  
 
 #### Packet Header:
 
 `A5` start byte of packet
 
-`22` send message or `12` ack message
+`22` send message or `12` ack message  (`52` might be error response)
 
 `1-byte` sequence number, increments by one each packet
 
@@ -108,15 +110,15 @@ Byte 22 Always `0`
 
 ##### `01 E6 A5` - Configure Fan Auto Mode (ESP to MCU)
 
-Byte 4 Fan Auto Mode
+Byte 4 Always `0` 
+
+Byte 5Fan Auto Mode
 
 - `00` Default, speed based on air quality
 - `01` Quiet, air quality but no max speed
 - `02` Efficient, based on room size
 
-Byte 5 & 6 Efficient Area
-
-Byte 7 Always `0`
+Byte 6 & 7 `00 00` or Efficient Area
 
 ##### `01 60 A2` - Set Fan Manual (ESP to MCU)
 
@@ -183,11 +185,12 @@ Byte 5 Screen Brightness
 - `00` Screen Off
 - `64` Screen Full
 
-##### `01 E2 A5` - Unknown (ESP to MCU)
+##### `01 E2 A5` - Set Filter LED (ESP to MCU)
 
-At startup, maybe filter led state?
+Byte 4
 
-Byte 4 `0`
+- `00` Off
+- `01` On
 
 Byte 5 `0`
 
@@ -240,9 +243,9 @@ Byte 5 & 6 and Byte 9 &10 set to same initial timer value
 
 #### TODO:
 
-- See if `01 E4 A5` can b be used to turn filter light on/off by ESP
-- Code custom UART esphome interface.  Finish Filter and Auto mode
 - Investigate OTA of stock hardware without disassembly.
+- Filter Life tracking
+- Timer feedback if enabled on unit
 
 #### Notes:
 
@@ -255,5 +258,3 @@ Internal ESP32 sends out some limited status information on the serial port duri
 Internal ESP32 seems to use MQTT to communicate with Vesync servers.  Wireshark dissector shows packets as malformed.  They might be encrypted.
 
 FW update downloads file from fw.vesync.com.  Looks to be initiated by MQTT. OTA error message indicates vesync header invalid.
-
-It seems the filter life is tracked and stored in the ESP.  ESPHome implementation will need to replicate.

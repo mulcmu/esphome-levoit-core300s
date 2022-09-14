@@ -118,7 +118,7 @@ text_sensor:
         - name: ${upper_name} DisplayLit
           icon: mdi:lightbulb-on-50
         - name: ${upper_name} Display Locked
-          icon: mdi:locked
+          icon: mdi:lock
         - name: ${upper_name} Fan Auto Mode
           icon: mdi:fan-auto
         - name: ${upper_name} FW
@@ -218,9 +218,38 @@ button:
     on_press:
       lambda: |-
         auto c_core300_uart = ${init}
-        c_core300_uart->wifi_led_on();                          
+        c_core300_uart->wifi_led_on();      
+  - platform: template
+    name: "Filter Led On"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->filter_led_on();   
+  - platform: template
+    name: "Filter Led Off"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->filter_led_off();                                
+  - platform: template
+    name: "Fan Auto PPM"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_auto_ppm();      
+  - platform: template
+    name: "Fan Auto PPM Quiet"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_auto_ppmQuiet();   
+  - platform: template
+    name: "Fan Auto RoomSize"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_auto_area(); 
 
-#TODO, see if this can be triggered on state change
 interval:
   - interval: 1s
     then:
