@@ -107,6 +107,16 @@ class component_core300sUART :
               
         }
     
+    void power_on(void) {
+        ESP_LOGD(TAG, "power_on");
+        send_command(cmd_power_on);
+    }
+        
+    void power_off(void) {
+        ESP_LOGD(TAG, "power_off");
+        send_command(cmd_power_off);    
+    }
+
     void set_fan_manual_high(void) {
         ESP_LOGD(TAG, "set_fan_manual_high");
         send_command(cmd_set_fan_manual_high);
@@ -114,18 +124,72 @@ class component_core300sUART :
         
     void set_fan_manual_medium(void) {
         ESP_LOGD(TAG, "set_fan_manual_medium");
-        send_command(cmd_set_fan_manual_medium);    }
+        send_command(cmd_set_fan_manual_medium);    
+    }
         
     void set_fan_manual_low(void) {
         ESP_LOGD(TAG, "set_fan_manual_low");
         send_command(cmd_set_fan_manual_low);
     }
+
+    void set_fan_mode_manual(void) {
+        ESP_LOGD(TAG, "set_fan_mode_manual");
+        send_command(cmd_set_fan_mode_manual);
+    }
+
+    void set_fan_mode_sleep(void) {
+        ESP_LOGD(TAG, "set_fan_mode_sleep");
+        send_command(cmd_set_fan_mode_sleep);
+    }
         
+    void set_fan_mode_auto(void) {
+        ESP_LOGD(TAG, "set_fan_mode_auto");
+        send_command(cmd_set_fan_mode_auto);    
+    }
+        
+    void lock_display(void) {
+        ESP_LOGD(TAG, "lock_display");
+        send_command(cmd_lock_display);
+    }
+
+    void unlock_display(void) {
+        ESP_LOGD(TAG, "unlock_display");
+        send_command(cmd_unlock_display);
+    }
+        
+    void display_on(void) {
+        ESP_LOGD(TAG, "display_on");
+        send_command(cmd_display_on);    
+    }
+        
+    void display_off(void) {
+        ESP_LOGD(TAG, "display_off");
+        send_command(cmd_display_off);
+    }
+
+    void wifi_led_off(void) {
+        ESP_LOGD(TAG, "wifi_led_off");
+        send_command(cmd_wifi_led_off);
+    }
+        
+    void wifi_led_flash(void) {
+        ESP_LOGD(TAG, "wifi_led_flash");
+        send_command(cmd_wifi_led_flash);    
+    }
+        
+    void wifi_led_on(void) {
+        ESP_LOGD(TAG, "wifi_led_on");
+        send_command(cmd_wifi_led_on);
+    }                
+          
   private: 
     uint8_t b=0;
     std::vector<uint8_t> rx_buf,tx_buf;
     uint8_t tx_seq_num = 0;
    
+    std::vector<uint8_t> cmd_power_on              = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0XA0, 0X00, 0X01};
+    std::vector<uint8_t> cmd_power_off             = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0xA0, 0X00, 0X00};  
+
     std::vector<uint8_t> cmd_set_fan_manual_high   = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X03};
     std::vector<uint8_t> cmd_set_fan_manual_medium = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X02};
     std::vector<uint8_t> cmd_set_fan_manual_low    = {0XA5, 0X22, 0XFF, 0X07, 0X00, 0XFF, 0X01, 0X60, 0XA2, 0X00, 0X00, 0X01, 0X01};
@@ -137,12 +201,13 @@ class component_core300sUART :
     std::vector<uint8_t> cmd_lock_display          = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0XD1, 0X00, 0X01};
     std::vector<uint8_t> cmd_unlock_display        = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0XD1, 0X00, 0X00};    
 
-    std::vector<uint8_t> cmd_wifi_led_off          = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};    
-    std::vector<uint8_t> cmd_wifi_led_flash        = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};
-    std::vector<uint8_t> cmd_wifi_led_on           = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};
-    
-    std::vector<uint8_t> cmd_unloack_display       = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X00, 0XD1, 0X00, 0X00};        
+    std::vector<uint8_t> cmd_display_on            = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X05, 0XA1, 0X00, 0X64};
+    std::vector<uint8_t> cmd_display_off           = {0XA5, 0X22, 0XFF, 0X05, 0X00, 0XFF, 0X01, 0X05, 0XA1, 0X00, 0X00}; 
 
+    std::vector<uint8_t> cmd_wifi_led_off          = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};    
+    std::vector<uint8_t> cmd_wifi_led_on           = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X01, 0X7D, 0X00, 0X7D, 0X00, 0X00};
+    std::vector<uint8_t> cmd_wifi_led_blink        = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X02, 0XF4, 0X01, 0XF4, 0X01, 0X00};
+    
     component_core300sUART(UARTComponent *parent) : PollingComponent(200), UARTDevice(parent) 
     {
         this->sensor_pm25  = new Sensor();

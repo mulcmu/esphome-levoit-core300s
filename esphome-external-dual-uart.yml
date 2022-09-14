@@ -130,6 +130,18 @@ button:
   - platform: restart
     name: ${upper_name} Restart
   - platform: template
+    name: "Power On"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->power_on();
+  - platform: template
+    name: "Power Off"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->power_off();   
+  - platform: template
     name: "Set Fan Manual High"
     on_press:
       lambda: |-
@@ -146,4 +158,65 @@ button:
     on_press:
       lambda: |-
         auto c_core300_uart = ${init}
-        c_core300_uart->set_fan_manual_low();               
+        c_core300_uart->set_fan_manual_low();  
+  - platform: template
+    name: "Set Fan Mode Manual"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_mode_manual();
+  - platform: template
+    name: "Set Fan Mode Sleep"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_mode_sleep();
+  - platform: template
+    name: "Set Fan Mode Auto"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->set_fan_mode_auto();               
+  - platform: template
+    name: "Lock Display"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->lock_display();  
+  - platform: template
+    name: "Unlock Display"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->unlock_display();
+  - platform: template
+    name: "Display On"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->display_on();   
+  - platform: template
+    name: "Display Off"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->display_off();  
+  - platform: template
+    name: "wifi_led_off"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->wifi_led_off();
+  - platform: template
+    name: "wifi_led_flash"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->wifi_led_flash();   
+  - platform: template
+    name: "wifi_led_on"
+    on_press:
+      lambda: |-
+        auto c_core300_uart = ${init}
+        c_core300_uart->wifi_led_on();                          
+
