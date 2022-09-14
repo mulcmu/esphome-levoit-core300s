@@ -7,7 +7,7 @@ Added a wire harness out the top with connections to the J1 header for the ESP32
 
 Uploaded packet captures and mostly decoded.  Looks like a 3 byte payload type or bitmapped structure.  Filter life appears to be traced by the ESP, not stored in the U2 MCU.  ESPHome will need to replicate some sort of filter usage metric.  
 
-#### Packet structure:
+#### Packet Header:
 
 `A5` start byte of packet
 
@@ -15,7 +15,7 @@ Uploaded packet captures and mostly decoded.  Looks like a 3 byte payload type o
 
 `1-byte` sequence number, increments by one each packet
 
-`1-byte` size of payload after checksum byte
+`1-byte` size of payload (after checksum byte)
 
 `0` always zero
 
@@ -81,11 +81,9 @@ Byte 13 Current Fan Speed
 
 Byte 14 Always `0`
 
-Byte 15 PM2.5  (Normally `1` increased to `4` during filter testing)
+Byte 15 PM2.5  (Normally `1` increased to `4` during filter testing, color ring LEDs)
 
-Byte 16 PM2.5
-
-Byte 17 PM2.5 Always `0`  (A few `1` during filter testing)
+Byte 16 & 17 PM2.5  0xFFFF when off, samples every 15 minutes when off
 
 Byte 18 Display Lock:
 
@@ -110,7 +108,11 @@ Byte 22 Always `0`
 
 ##### `01 E6 A5` - Configure Fan Auto Mode (ESP to MCU)
 
-Byte 4 Fan Auto Mode (Same as status Packet)
+Byte 4 Fan Auto Mode
+
+- `00` Default, speed based on air quality
+- `01` Quiet, air quality but no max speed
+- `02` Efficient, based on room size
 
 Byte 5 & 6 Efficient Area
 
@@ -136,7 +138,7 @@ Byte 4 Always `0`
 
 Byte 5 Fan Mode
 
-- `00` Manual (Assumed, App always uses `01 60 A2` with speed to change to manual speed)
+- `00` Manual (App always uses `01 60 A2` with speed to change to manual mode)
 - `01` Sleep
 - `02` Auto 
 
@@ -153,7 +155,8 @@ Byte 5Display Lock:
 
 Wifi LED toggled at startup and when network connection changes
 
-`	1	29	A1	0	0	F4	1	F4	1	0` Off
+`1	29	A1	0	0	F4	1	F4	1	0 `Off
+
 `1	29	A1	0	1	7D	0	7D	0	0` On
 
 `1	29	A1  0   2   F4  1   F4  1   0` Blink
@@ -237,12 +240,9 @@ Byte 5 & 6 and Byte 9 &10 set to same initial timer value
 
 #### TODO:
 
-- Figure out PM2.5 values
 - See if `01 E4 A5` can b be used to turn filter light on/off by ESP
-- PM2.5 sensor is reading super low.  Other 3 Core300s units are consistent with readings of 0 to 3 ug/m3.  Burning plastic / vacuum filter triggered spike.
-- Code custom UART esphome interface.
+- Code custom UART esphome interface.  Finish Filter and Auto mode
 - Investigate OTA of stock hardware without disassembly.
-- Can ESP control the wifi indicator light?  Is this a ESP32 gpio or MCU pin?
 
 #### Notes:
 
