@@ -206,7 +206,7 @@ class component_core300sUART :
 
     std::vector<uint8_t> cmd_wifi_led_off          = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X00, 0XF4, 0X01, 0XF4, 0X01, 0X00};    
     std::vector<uint8_t> cmd_wifi_led_on           = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X01, 0X7D, 0X00, 0X7D, 0X00, 0X00};
-    std::vector<uint8_t> cmd_wifi_led_blink        = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X02, 0XF4, 0X01, 0XF4, 0X01, 0X00};
+    std::vector<uint8_t> cmd_wifi_led_flash        = {0XA5, 0X22, 0XFF, 0X0A, 0X00, 0XFF, 0X01, 0X29, 0XA1, 0X00, 0X02, 0XF4, 0X01, 0XF4, 0X01, 0X00};
     
     component_core300sUART(UARTComponent *parent) : PollingComponent(200), UARTDevice(parent) 
     {
@@ -339,7 +339,10 @@ class component_core300sUART :
                     textsensor_DisplayLit->publish_state(buf);
                 }
                                         
-                sensor_pm25->publish_state( (rx_buf[22]<<8) + rx_buf[21]);
+                if(rx_buf[22]==0xFF && rx_buf[21]==0xFF)  //0xFFFF returned when off, samples every 15 minutes while off.
+                    sensor_pm25->publish_state(NAN);                
+                else
+                    sensor_pm25->publish_state( (rx_buf[22]<<8) + rx_buf[21]);
 
                 switch(rx_buf[23]) {  //Display Lock
                     case 0x00:
