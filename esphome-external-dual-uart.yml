@@ -5,11 +5,16 @@ substitutions:
 
 esphome:
   name: core300debug
-  platform: esp32
-  board: nodemcu-32s
   includes:
     - esphome-external-dual-uart.h
-  
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_FREERTOS_UNICORE: y
+      
 logger:
   baud_rate: 115200
 
@@ -44,10 +49,10 @@ time:
 uart:
   - id: uart_mcu2esp
     tx_pin: 
-      number: GPIO21
+      number: GPIO17
       inverted: false
     rx_pin: 
-      number: GPIO22
+      number: GPIO16
       inverted: false
     baud_rate: 115200
     debug:
