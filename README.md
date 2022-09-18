@@ -7,7 +7,7 @@ Added a wire harness out the top with connections to the J1 header for the ESP32
 
 Uploaded packet captures and mostly decoded.  Looks like a 3 byte payload type or bitmapped structure.  Filter life appears to be traced by the ESP, not stored in the U2 MCU.  ESPHome will need to replicate some sort of filter usage metric.
 
-Custom UART component for ESPHome is mostly working.  Expected feedback from air filter confirmed and buttons working to control unit via local network, no vesync app/cloud.  
+Custom UART component for ESPHome is mostly working.  Expected feedback from air filter confirmed and buttons working to control unit via local network, no vesync app/cloud.  Update stock firmware to 1.0.8 / 2.0.13 before flashing esphome.  2.0.7 on one of my units had issues with pm2.5 and fan speed.
 
 #### Packet Header:
 
