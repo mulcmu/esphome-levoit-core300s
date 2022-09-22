@@ -241,11 +241,27 @@ Byte 5 & 6 and Byte 9 &10 set to same initial timer value
 - Filter life remaining.  
 - No Timer/Schedule support (implement in HA instead of on device)
 
+#### Filter Life:
+
+Manufacturer lists the filter life at 6 to 8 months and provided clean air deliver rates (CADR) for the different fan modes.
+
+| Fan Speed | CADR    |
+| --------- | ------- |
+| Sleep     | 37 CFM  |
+| Low       | 60 CFM  |
+| Med       | 80 CFM  |
+| High      | 141 CFM |
+
+Filter lifetime air volume will be estimated based on user provided number of months and 24h operation on High.  The actual air volume through the filter will be estimated based actual runtime and volume for each fan speed.
+
+Filter state sensor will provide a remaining lifetime percent.  Filter service interval will also be selectable and tracked.  Filter service is basically just to vacuum pre-filter.
+
 #### TODO:
 
 - Investigate OTA of stock hardware without disassembly.
 - Filter Life tracking
 - Timer feedback if enabled on unit
+- PM2.5 feedback seems very low.  Sensor unit is a Cubic PM2008MS.  Look into raw data.
 
 #### Notes:
 
