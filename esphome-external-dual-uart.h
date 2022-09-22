@@ -290,7 +290,7 @@ class component_core300sUART :
         tx_buf.assign(rx_buf.begin(),rx_buf.begin()+9);
         tx_buf.push_back(0);
         tx_buf[1]=0x12;  //ack byte
-        tx_buf[3]=4; //payload lenght
+        tx_buf[3]=4; //payload length
         tx_buf[5]=0; //checksum byte
         uint8_t cs=255;
         for(int i=0; i<tx_buf.size(); i++) {
@@ -394,7 +394,7 @@ class component_core300sUART :
                 if(rx_buf[22]==0xFF && rx_buf[21]==0xFF)  //0xFFFF returned when off, samples every 15 minutes while off.
                     sensor_pm25->publish_state(NAN);                
                 else
-                    sensor_pm25->publish_state( (rx_buf[22]<<8) + rx_buf[21]);
+                    sensor_pm25->publish_state( (float) ((rx_buf[22]<<8) + rx_buf[21]) / 1.0);
 
                 switch(rx_buf[23]) {  //Display Lock
                     case 0x00:

@@ -1,10 +1,10 @@
 substitutions:
-  name: core300debug
+  name: "core300s-debug"
   upper_name: Core 300s Debug
   init: 'component_core300sUART::instance(id(uart_mcu2esp));'
 
 esphome:
-  name: core300debug
+  name: ${name}
   includes:
     - esphome-external-dual-uart.h
 
@@ -20,7 +20,9 @@ logger:
 
 # Enable Home Assistant API
 api:
-
+  encryption:
+    key: "key"
+    
 ota:
   password: !secret esp_home_ota_pw
 
@@ -86,8 +88,15 @@ sensor:
       };
     sensors:
       - name: ${upper_name} PM25
-        accuracy_decimals: 0
+        accuracy_decimals: 1
         icon: mdi:air-filter
+        unit_of_measurement: µg/m³
+        filters:
+          - throttle: 50s
+          - median:
+              window_size: 4
+              send_every: 1
+              send_first_at: 1
       - name: ${upper_name} Room Size
         accuracy_decimals: 0
         icon: mdi:axis-arrow
