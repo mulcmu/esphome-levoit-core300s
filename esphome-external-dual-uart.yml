@@ -7,7 +7,10 @@ esphome:
   name: ${name}
   includes:
     - esphome-external-dual-uart.h
-
+  project: 
+    name: "Levoit.Core300s"
+    version: "0.7.0"
+    
 esp32:
   board: esp32dev
   framework:
@@ -91,12 +94,12 @@ sensor:
         accuracy_decimals: 1
         icon: mdi:air-filter
         unit_of_measurement: µg/m³
-        filters:
-          - throttle: 50s
-          - median:
-              window_size: 4
-              send_every: 1
-              send_first_at: 1
+        # filters:
+        #   - throttle: 50s
+        #   - median:
+        #       window_size: 4
+        #       send_every: 1
+        #       send_first_at: 1
       - name: ${upper_name} Room Size
         accuracy_decimals: 0
         icon: mdi:axis-arrow
