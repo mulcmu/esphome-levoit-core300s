@@ -265,7 +265,7 @@ Filter state sensor will provide a remaining lifetime percent.  Filter service i
 
 #### Notes:
 
-Vesync app has original FW version for ESP and MCU from the PCB sticker.  OTA firmware updated ESP and MCU firmware.  Is MCU firmware binary stored in the ESP firmware?
+Vesync app has original FW version for ESP and MCU from the PCB sticker.  OTA firmware updated ESP and MCU firmware.
 
 The external ESP32 data logger can be used as test ESPhome device if internal ESP32 is put into bootloader mode at powerup.
 
@@ -273,4 +273,6 @@ Internal ESP32 sends out some limited status information on the serial port duri
 
 Internal ESP32 seems to use MQTT to communicate with Vesync servers.  Wireshark dissector shows packets as malformed.  They might be encrypted.
 
-FW update downloads file from fw.vesync.com.  Looks to be initiated by MQTT. OTA error message indicates vesync header invalid.
+FW update downloads file from fw.vesync.com.  Looks to be initiated by MQTT. Just flashing the OTA binary or saved binary doesn't seem to update the U2 firmware automatically.  Looks like another MQTT command and file download for MCU update.
+
+Ordered 2 more October 2022, still have 1.1.01 and 2.0.7 firmware from factory.
