@@ -103,7 +103,6 @@ sensor:
       - name: ${upper_name} Room Size
         accuracy_decimals: 0
         icon: mdi:axis-arrow
-        entity_category: config
         
 # Text sensors with general information.
 text_sensor:
