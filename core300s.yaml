@@ -1,0 +1,231 @@
+substitutions:
+  name: "core300s"
+  upper_name: Core300s
+
+esphome:
+  name: ${name}
+  project: 
+    name: "Levoit.Core300s"
+    version: "2.0.0"
+  on_boot:
+    priority: 250
+    then:
+      - delay: 60s
+      - lambda: |-
+          id(ble_tracker).set_scan_continuous(true); 
+          id(ble_tracker).start_scan();    
+    
+esp32_ble_tracker:
+  id: ble_tracker
+  scan_parameters:
+    active: true
+    continuous: false
+    # interval: 211ms
+    # window: 120ms
+    # interval: 1100ms
+    # window: 1100ms
+
+bluetooth_proxy:
+  active: true
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_FREERTOS_UNICORE: y
+      
+logger:
+  baud_rate: 115200
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "HbhxCiVHXkCbso1gE9dEOVtickKZr0F9snENSHwlIYc="
+    
+ota:
+  password: !secret esp_home_ota_pw
+  platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  
+  # Optional manual IP
+  manual_ip:
+    static_ip: 192.168.0.195
+    gateway: 192.168.0.9
+    subnet: 255.255.255.0
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+
+external_components:
+  - source: local_components
+    components: [core300s]
+
+uart:
+  - id: uart_mcu2esp
+    tx_pin: 
+      number: GPIO17
+      inverted: false
+    rx_pin: 
+      number: GPIO16
+      inverted: false
+    baud_rate: 115200
+    debug:
+      direction: BOTH
+      after:
+          timeout: 50ms
+      sequence:
+        - lambda:  UARTDebug::log_hex(direction, bytes, ':'); 
+
+sensor:
+  # Uptime sensor.
+  - platform: uptime
+    name: ${upper_name} Uptime
+
+  # WiFi Signal sensor.
+  - platform: wifi_signal
+    name: ${upper_name} WiFi Signal
+    update_interval: 60s
+
+text_sensor:
+  # Expose WiFi information as sensors.
+  - platform: wifi_info
+    ip_address:
+      name: ${upper_name} IP
+
+core300s:  
+  id: core300s_ID
+  uart_id: uart_mcu2esp
+  update_interval: 5s
+  pm25:
+    name: ${upper_name} PM25
+    icon: mdi:air-filter
+    unit_of_measurement: µg/m³
+    filters:
+      - lambda: |-
+          if (x < 6) return 0;
+          return x;
+  room_size:
+    name: ${upper_name} Room Size
+    icon: mdi:axis-arrow
+  fan_speed:
+    name: ${upper_name} Fan Speed
+    icon: mdi:fan
+  power:
+    name: ${upper_name} Power
+  mcu_version:
+    name: ${upper_name} MCU Version
+    icon: mdi:select-inverse    
+    entity_category:  diagnostic    
+  fan_mode:
+    name: ${upper_name} Fan Mode
+    icon: mdi:fan
+  display_lit:
+    name: ${upper_name} Display Lit
+    icon: mdi:lightbulb-on-50    
+  display_locked:
+    name: ${upper_name} Display Lock
+    icon: mdi:lock
+  fan_auto_mode:
+    name: ${upper_name} Fan Auto Mode
+    icon: mdi:fan-auto    
+
+button:
+  - platform: restart
+    name: ${upper_name} Restart
+  - platform: template
+    name: "Power On"
+    on_press:
+      lambda: id(core300s_ID)->power_on();
+  - platform: template
+    name: "Power Off"
+    on_press:
+      lambda: id(core300s_ID)->power_off();   
+  - platform: template
+    name: "Set Fan Manual High"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_manual_high();
+  - platform: template
+    name: "Set Fan Manual Medium"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_manual_medium();   
+  - platform: template
+    name: "Set Fan Manual Low"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_manual_low();  
+  - platform: template
+    name: "Set Fan Mode Manual"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_mode_manual();
+  - platform: template
+    name: "Set Fan Mode Sleep"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_mode_sleep();
+  - platform: template
+    name: "Set Fan Mode Auto"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_mode_auto();               
+  - platform: template
+    name: "Lock Display"
+    on_press:
+      lambda: id(core300s_ID)->lock_display();  
+  - platform: template
+    name: "Unlock Display"
+    on_press:
+      lambda: id(core300s_ID)->unlock_display();
+  - platform: template
+    name: "Display On"
+    on_press:
+      lambda: id(core300s_ID)->display_on();   
+  - platform: template
+    name: "Display Off"
+    on_press:
+      lambda: id(core300s_ID)->display_off();  
+  - platform: template
+    name: "wifi_led_off"
+    on_press:
+      lambda: id(core300s_ID)->wifi_led_off();
+  - platform: template
+    name: "wifi_led_flash"
+    on_press:
+      lambda: id(core300s_ID)->wifi_led_flash();   
+  - platform: template
+    name: "wifi_led_on"
+    on_press:
+      lambda: id(core300s_ID)->wifi_led_on();      
+  - platform: template
+    name: "Filter Led On"
+    on_press:
+      lambda: id(core300s_ID)->filter_led_on();   
+  - platform: template
+    name: "Filter Led Off"
+    on_press:
+      lambda: id(core300s_ID)->filter_led_off();                                
+  - platform: template
+    name: "Fan Auto PPM"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_auto_ppm();      
+  - platform: template
+    name: "Fan Auto PPM Quiet"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_auto_ppmQuiet();   
+  - platform: template
+    name: "Fan Auto RoomSize"
+    on_press:
+      lambda: id(core300s_ID)->set_fan_auto_area(); 
+
+interval:
+  - interval: 1s
+    then:
+      if:
+        condition:
+          wifi.connected:
+        then:
+          - lambda: id(core300s_ID)->wifi_led_on();  
+        else:
+          - lambda: id(core300s_ID)->wifi_led_off();  
